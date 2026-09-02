@@ -1,27 +1,36 @@
 """
-Build the complete *Daphnia magna*-adapted bacteriophage genome ("phage code"):
+Build a complete, host-adapted bacteriophage genome for ANY host ("if I give
+any cell genome, make a phage for it"):
 
-  1. host analysis   -- Daphnia codon-usage profile from 31,317 real CDS
-  2. design          -- 50 kb dsDNA genome, every gene back-translated with
-                        Daphnia codon usage (Sharp & Li 1987 CAI), terminal
-                        repeats, Shine-Dalgarno RBS
-  3. annotation      -- T7-like functional layout assigned to all six-frame
-                        ORFs, emitted as GFF3
-  4. verification    -- phage-biology validation (6-frame coding density),
-                        protein-production test (translate every ORF),
-                        codon-adaptation index vs Daphnia, and VirHostMatcher
-                        d2* host screen vs Daphnia, its bacterial pathogen
-                        Pasteuria ramosa, and 10 real superbug genomes
+  1. host analysis  -- codon-usage profile from the host's CDS (extracted
+                       from a GTF/GFF annotation, or a CDS FASTA)
+  2. design         -- 40-50 kb dsDNA genome, every gene back-translated with
+                       the host's codon usage (Sharp & Li 1987 CAI), terminal
+                       repeats, Shine-Dalgarno RBS
+  3. annotation     -- T7-like functional layout assigned to all six-frame
+                       ORFs, emitted as GFF3
+  4. verification   -- phage-biology validation, protein-production test,
+                       codon-adaptation index vs the host, and VirHostMatcher
+                       d2* screen vs the host genome, an optional extra
+                       bacterium, and 10 real superbug reference genomes
 
-Outputs land in SciAgent/outputs/:
-    daphnia_phage_1.fasta    the complete annotated genome
-    daphnia_phage_1.gff3     gene/CDS feature table
-    daphnia_phage_1.json     full verification results
+Outputs land in SciAgent/outputs/<prefix>.<fasta|gff3|json>
+
+Examples:
+    # Daphnia magna (default; KEGG/ncbi dataset in data/Daphnia_magna_NIES)
+    .venv/bin/python build_daphnia_phage.py
+
+    # Lactobacillus acidophilus FSI4 (KEGG T03681, yogurt probiotic)
+    .venv/bin/python build_daphnia_phage.py \
+        --host-name Lactobacillus_acidophilus_FSI4 \
+        --genome-fasta data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
+        --gtf data/hosts/Lactobacillus_acidophilus_FSI4.gff \
+        --prefix lacto_phage_1 --seed 7
 """
 from __future__ import annotations
 
+import argparse
 import json
-import math
 import sys
 import time
 from pathlib import Path
@@ -31,22 +40,16 @@ sys.path.insert(0, str(Path(__file__).parent))
 from phage_genome import (                     # noqa: E402
     generate_phage_genome, validate_phage_genome,
     protein_production_report, _scan_orfs, reverse_complement,
+    extract_cds_from_gtf,
 )
 from host_compat import (                      # noqa: E402
     codon_usage_from_cds, codon_adaptation_index,
-    d2star, screen_compatibility, gc_content, ncbi_get,
+    d2star, screen_compatibility, gc_content,
 )
 
 ROOT = Path(__file__).parent
 DATA = ROOT / "data" / "Daphnia_magna_NIES"
 OUT = ROOT / "outputs"
-CDS_FA = DATA / "Daphnia_magna_NIES_cds.fa"
-GENOME_FA = DATA / "Daphnia_magna_NIES_genome.fa"
-P_RAMOSA_FA = ROOT / "data" / "hosts" / "Pasteuria_ramosa_GCF_056496825.1.fasta"
-
-NAME = "phage_Dm_alpha"
-LENGTH = 50_000
-SEED = 42
 
 # T7-like functional layout, bucketed by genomic position (fraction of genes)
 GENE_CATALOG = {
@@ -93,6 +96,20 @@ def genome_gc_sample(path: Path, n_bp: int = 20_000_000) -> float:
     return gc_content(first_n_bp(path, n_bp))
 
 
+def build_codon_usage(args) -> dict:
+    """Codon-usage profile from GTF-extracted CDS, or a CDS FASTA directly."""
+    if args.gtf:
+        cds_list = extract_cds_from_gtf(args.genome_fasta, args.gtf)
+        tmp = OUT / f"__cds_{args.prefix}.fasta"
+        tmp.write_text("".join(f">cds{i}\n{s}\n" for i, s in enumerate(cds_list)))
+        out(f"  extracted {len(cds_list)} spliced CDS from {args.gtf}")
+        usage = codon_usage_from_cds(str(tmp))
+        tmp.unlink(missing_ok=True)
+        return usage
+    out(f"  using pre-built CDS FASTA {args.cds_fasta}")
+    return codon_usage_from_cds(str(args.cds_fasta))
+
+
 def annotate(seq: str, host_usage: dict) -> list:
     """Scan six-frame ORFs and assign a T7-like function to each."""
     forward, reverse = _scan_orfs(seq)
@@ -110,59 +127,87 @@ def annotate(seq: str, host_usage: dict) -> list:
         elif f < 0.30:
             product = GENE_CATALOG["early"][i % len(GENE_CATALOG["early"])]
         elif f < 0.75:
-            product = GENE_CATALOG["middle"][(i - int(0.30 * n)) % len(GENE_CATALOG["middle"])]
+            idx = (i - int(0.30 * n)) % len(GENE_CATALOG["middle"])
+            product = GENE_CATALOG["middle"][idx]
         else:
-            product = GENE_CATALOG["late"][(i - int(0.75 * n)) % len(GENE_CATALOG["late"])]
-        cai = codon_adaptation_index(cds, host_usage)
+            idx = (i - int(0.75 * n)) % len(GENE_CATALOG["late"])
+            product = GENE_CATALOG["late"][idx]
         genes.append({
             "gene_id": f"g{i + 1:03d}", "start": s + 1, "end": e,
             "strand": strand, "product": product,
-            "protein_len": len(cds) // 3 - 1, "cai": round(cai, 3),
-            "cds": cds,
+            "protein_len": len(cds) // 3 - 1,
+            "cai": round(codon_adaptation_index(cds, host_usage), 3),
         })
     return genes
 
 
-def write_fasta(seq: str, path: Path) -> None:
+def write_fasta(seq: str, name: str, args, path: Path) -> None:
     with open(path, "w") as f:
-        f.write(f">{NAME} synthetic Daphnia-adapted bacteriophage, "
-                f"{len(seq)} bp, dsDNA, terminal repeats\\n")
+        f.write(f">{name} synthetic {args.host_name}-adapted bacteriophage, "
+                f"{len(seq)} bp, dsDNA, terminal repeats\n")
         for i in range(0, len(seq), 80):
             f.write(seq[i:i + 80] + "\n")
 
 
-def write_gff3(seq: str, genes: list, path: Path) -> None:
+def write_gff3(seq: str, name: str, genes: list, path: Path) -> None:
     with open(path, "w") as f:
         f.write("##gff-version 3\n")
-        f.write(f"##sequence-region {NAME} 1 {len(seq)}\n")
-        # terminal repeat / packaging region
-        f.write(f"{NAME}\tSciAgent\ttransit_peptide\t1\t200\t.\t+\t.\t"
-                f"ID=TR001;product=direct terminal repeat (packaging signal);note=predicted\n")
+        f.write(f"##sequence-region {name} 1 {len(seq)}\n")
+        f.write(f"{name}\tSciAgent\ttransit_peptide\t1\t200\t.\t+\t.\t"
+                f"ID=TR001;product=direct terminal repeat (packaging signal)"
+                f";note=predicted\n")
         for g in genes:
-            f.write(f"{NAME}\tSciAgent\tCDS\t{g['start']}\t{g['end']}\t.\t"
+            f.write(f"{name}\tSciAgent\tCDS\t{g['start']}\t{g['end']}\t.\t"
                     f"{g['strand']}\t0\tID={g['gene_id']};"
-                    f"product={g['product']};cai={g['cai']};note=predicted, "
-                    f"layout-based annotation\n")
+                    f"product={g['product']};cai={g['cai']};"
+                    f"note=predicted, layout-based annotation\n")
 
 
-def main() -> int:
+def parse_args(argv=None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        prog="build_daphnia_phage",
+        description="Design and verify a host-adapted phage genome for "
+                    "any host genome (Daphnia magna by default).")
+    p.add_argument("--host-name", default="Daphnia_magna",
+                   help="host species/isolate name (used in genome name)")
+    p.add_argument("--genome-fasta", default=str(DATA / "Daphnia_magna_NIES_genome.fa"))
+    p.add_argument("--gtf", default=None,
+                   help="GTF/GFF annotation to extract CDS from")
+    p.add_argument("--cds-fasta", default=str(DATA / "Daphnia_magna_NIES_cds.fa"),
+                   help="pre-built CDS FASTA (used when --gtf is not given)")
+    p.add_argument("--pathogen-fasta",
+                   default=str(ROOT / "data" / "hosts"
+                               / "Pasteuria_ramosa_GCF_056496825.1.fasta"),
+                   help="optional extra genome to screen (e.g. a pathogen)")
+    p.add_argument("--no-pathogen-screen", action="store_true")
+    p.add_argument("--superbug-cache", default="/tmp/host_cache",
+                   help="cache dir holding real superbug genomes")
+    p.add_argument("--length", type=int, default=50_000)
+    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--prefix", default="daphnia_phage_1")
+    return p.parse_args(argv)
+
+
+def main(argv=None) -> int:
+    global out
+    args = parse_args(argv)
     t0 = time.time()
-    out = lambda msg: print(msg, flush=True)
     OUT.mkdir(exist_ok=True)
+    out = lambda msg: print(msg, flush=True)
 
-    out("== 1. Daphnia host analysis ==")
-    out(f"  building codon-usage profile from {CDS_FA.name} ...")
-    host_usage = codon_usage_from_cds(str(CDS_FA))
-    n_codons = sum(host_usage.values())
-    out(f"  {len(host_usage)} codons, total weight {n_codons:.1f}")
-    daph_gc = genome_gc_sample(GENOME_FA)
-    out(f"  Daphnia genome GC (20 Mb sample): {daph_gc:.3f}")
+    genome_name = f"phage_{args.host_name}"
 
-    out("\n== 2. Design: codon-adapted 50 kb genome ==")
+    out("== 1. Host analysis ==")
+    host_usage = build_codon_usage(args)
+    out(f"  {len(host_usage)} codons in profile (sum {sum(host_usage.values()):.2f})")
+    host_gc = genome_gc_sample(Path(args.genome_fasta))
+    out(f"  host genome GC (20 Mb sample): {host_gc:.3f}")
+
+    out("\n== 2. Design: host-adapted DNA ==")
     genome = generate_phage_genome(
-        length=LENGTH, gc_target=daph_gc - 0.05, seed=SEED,
-        terminal_repeat=200, rbs_fraction=0.9, name=NAME,
-        host_codon_usage=host_usage,
+        length=args.length, gc_target=max(0.25, host_gc - 0.05),
+        seed=args.seed, terminal_repeat=200, rbs_fraction=0.9,
+        name=genome_name, host_codon_usage=host_usage,
     )
     seq = genome.sequence
     out(f"  {len(seq):,} bp, GC {genome.metadata['gc']:.3f}, "
@@ -172,12 +217,13 @@ def main() -> int:
     out("\n== 3. Annotation ==")
     genes = annotate(seq, host_usage)
     out(f"  {len(genes)} six-frame ORFs annotated (T7-like layout)")
-    write_fasta(seq, OUT / "daphnia_phage_1.fasta")
-    write_gff3(seq, genes, OUT / "daphnia_phage_1.gff3")
-    out(f"  wrote {OUT / 'daphnia_phage_1.fasta'} and .gff3")
+    fa, gff = OUT / f"{args.prefix}.fasta", OUT / f"{args.prefix}.gff3"
+    write_fasta(seq, genome_name, args, fa)
+    write_gff3(seq, genome_name, genes, gff)
+    out(f"  wrote {fa} and {gff}")
 
     out("\n== 4. Verification ==")
-    validation = validate_phage_genome(seq, name=NAME)
+    validation = validate_phage_genome(seq, name=genome_name)
     out(validation.summary())
     passed = validation.passed
 
@@ -186,38 +232,41 @@ def main() -> int:
 
     cais = [g["cai"] for g in genes]
     mean_cai = sum(cais) / max(1, len(cais))
-    out(f"  mean codon-adaptation index vs Daphnia: {mean_cai:.3f} "
+    out(f"  mean codon-adaptation index vs host: {mean_cai:.3f} "
         f"(n={len(cais)} genes)")
 
     out("\n  d2* host screen (VirHostMatcher, k=6; lower = more similar):")
-    daph = first_n_bp(GENOME_FA, 5_000_000)
-    d2_daph = d2star(seq, daph)
-    out(f"    Daphnia magna genome (5 Mb)        d2* = {d2_daph:.4f}")
+    host_sample = first_n_bp(Path(args.genome_fasta), 5_000_000)
+    d2_host = d2star(seq, host_sample)
+    out(f"    host genome ({args.host_name}, 5 Mb)     d2* = {d2_host:.4f}")
 
-    pr = "".join(l.strip() for l in P_RAMOSA_FA.read_text().splitlines()
-                 if not l.startswith(">"))
-    d2_pr = d2star(seq, pr)
-    out(f"    Pasteuria ramosa (Daphnia pathogen) d2* = {d2_pr:.4f}  "
-        f"[{len(pr):,} bp]")
+    d2_pathogen, pathogen_name = None, None
+    if not args.no_pathogen_screen and Path(args.pathogen_fasta).exists():
+        pathogen_name = Path(args.pathogen_fasta).stem
+        pseq = first_n_bp(Path(args.pathogen_fasta), 50_000_000)
+        d2_pathogen = d2star(seq, pseq)
+        out(f"    pathogen/extra genome ({pathogen_name}) d2* = {d2_pathogen:.4f} "
+            f"[{len(pseq):,} bp]")
 
+    super_row, d2_super = {}, None
     out("    superbug panel (real NCBI reference genomes):")
     try:
-        cache_dir = Path("/tmp/host_cache")
-        if not cache_dir.exists():
-            cache_dir = ROOT / "data" / "hosts"
+        cache = Path(args.superbug_cache)
+        if not cache.exists():
+            cache = ROOT / "data" / "hosts"
         report = screen_compatibility(
-            seq, query_name=NAME, cache_dir=cache_dir, k=6)
-        super_row = {}
+            seq, query_name=genome_name, cache_dir=cache, k=6)
         for m in report.matches:
             super_row[m.taxon] = m.d2star
             out(f"      {m.taxon:28s} d2* = {m.d2star:.4f}")
-        d2_super = report.matches[0].d2star if report.matches else None
-    except Exception as exc:  # network failures must not kill the build
+        if report.matches:
+            d2_super = report.matches[0].d2star
+    except Exception as exc:
         out(f"    [warn] superbug screen failed: {exc}")
-        super_row, d2_super = {}, None
 
     results = {
-        "name": NAME, "length": len(seq), "gc": round(genome.metadata["gc"], 4),
+        "host": args.host_name, "name": genome_name,
+        "length": len(seq), "gc": round(genome.metadata["gc"], 4),
         "genes_annotated": len(genes),
         "validation_passed": passed,
         "validation": {c.name: {"passed": c.passed, "detail": c.detail}
@@ -230,15 +279,15 @@ def main() -> int:
         },
         "cai": {"mean": round(mean_cai, 3), "min": min(cais), "max": max(cais)},
         "d2star": {
-            "Daphnia_magna_genome": round(d2_daph, 4),
-            "Pasteuria_ramosa": round(d2_pr, 4),
+            "host_genome": round(d2_host, 4),
+            "pathogen_or_extra": (round(d2_pathogen, 4) if d2_pathogen is not None
+                                  else None),
             "superbugs": super_row,
         },
     }
-    (OUT / "daphnia_phage_1.json").write_text(
-        json.dumps(results, indent=2))
-    print(f"\n== done in {time.time()-t0:.0f}s; report: "
-          f"{OUT / 'daphnia_phage_1.json'} ==")
+    jp = OUT / f"{args.prefix}.json"
+    jp.write_text(json.dumps(results, indent=2))
+    out(f"\n== done in {time.time()-t0:.0f}s; report: {jp} ==")
     return 0 if passed else 1
 
 

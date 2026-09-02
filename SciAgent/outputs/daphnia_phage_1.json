@@ -1,5 +1,6 @@
 {
-  "name": "phage_Dm_alpha",
+  "host": "Daphnia_magna",
+  "name": "phage_Daphnia_magna",
   "length": 49787,
   "gc": 0.4662,
   "genes_annotated": 64,
@@ -47,8 +48,8 @@
     "max": 0.884
   },
   "d2star": {
-    "Daphnia_magna_genome": 0.4292,
-    "Pasteuria_ramosa": 0.3965,
+    "host_genome": 0.4292,
+    "pathogen_or_extra": 0.3965,
     "superbugs": {
       "Staphylococcus aureus (MRSA)": 0.395937,
       "Klebsiella pneumoniae (CRE)": 0.403318,

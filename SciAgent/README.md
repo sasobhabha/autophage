@@ -169,6 +169,28 @@ Daphnia in labs) — the lab-trial target. Outputs land in `outputs/`
 `DAPHNIA_PHAGE_LAB_TRIAL.md`. Honest limit: in-silico adaptation is a
 plausibility signal; infectivity must be proven in the wet lab.
 
+### Any host genome → its phage
+
+`build_daphnia_phage.py` accepts **any** host genome (FASTA + GTF/GFF
+annotation, or a CDS FASTA) and produces the same complete, verified
+deliverable. Example — KEGG genome **T03681** (*Lactobacillus acidophilus*
+FSI4, a yogurt probiotic):
+
+```bash
+.venv/bin/python SciAgent/build_daphnia_phage.py \
+    --host-name Lactobacillus_acidophilus_FSI4 \
+    --genome-fasta data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
+    --gtf data/hosts/Lactobacillus_acidophilus_FSI4.gff \
+    --prefix lacto_phage_1 --seed 7 --no-pathogen-screen
+```
+
+Result: 49.6 kb genome **VALIDATED** (all biology checks pass), **46/46
+ORFs → full proteins**, CAI 0.666 vs the host, and notably **d2\* = 0.284
+vs the *L. acidophilus* genome — ranked far above every other genome
+screened (next best 0.313, MRSA)** — the designed phage is k-mer-adapted to
+its intended host. NCBI GFF3 CDS extraction is supported in addition to
+GTF.
+
 ## Test
 
 ```bash

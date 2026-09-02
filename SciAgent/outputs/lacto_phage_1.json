@@ -1,0 +1,66 @@
+{
+  "host": "Lactobacillus_acidophilus_FSI4",
+  "name": "phage_Lactobacillus_acidophilus_FSI4",
+  "length": 49631,
+  "gc": 0.3805,
+  "genes_annotated": 46,
+  "validation_passed": true,
+  "validation": {
+    "alphabet": {
+      "passed": true,
+      "detail": "only A/C/G/T"
+    },
+    "length": {
+      "passed": true,
+      "detail": "49631 bp (expected 5000-700000)"
+    },
+    "gc_content": {
+      "passed": true,
+      "detail": "gc=0.381 (expected 0.25-0.70)"
+    },
+    "coding_density": {
+      "passed": true,
+      "detail": "0.820 of bases inside ORFs (min 0.5)"
+    },
+    "orf_count": {
+      "passed": true,
+      "detail": "46 ORFs >= 300 bp (min 8)"
+    },
+    "rbs_fraction": {
+      "passed": true,
+      "detail": "0.795 of forward ORFs have Shine-Dalgarno upstream (min 0.3)"
+    },
+    "terminal_repeats": {
+      "passed": true,
+      "detail": "direct terminal repeat of 200 bp found"
+    }
+  },
+  "protein_production": {
+    "orfs": 46,
+    "full_proteins": 46,
+    "truncated": 0,
+    "fraction": 1.0,
+    "mean_protein_len": 300.9
+  },
+  "cai": {
+    "mean": 0.666,
+    "min": 0.438,
+    "max": 0.723
+  },
+  "d2star": {
+    "host_genome": 0.2844,
+    "pathogen_or_extra": null,
+    "superbugs": {
+      "Staphylococcus aureus (MRSA)": 0.312886,
+      "Enterococcus faecium (VRE)": 0.375638,
+      "Acinetobacter baumannii (CRAB)": 0.375912,
+      "Klebsiella pneumoniae (CRE)": 0.415334,
+      "Mycobacterium tuberculosis (MDR-TB)": 0.417421,
+      "Pseudomonas aeruginosa (MDR/XDR)": 0.425,
+      "Escherichia coli (ESBL)": 0.428163,
+      "Salmonella enterica (MDR)": 0.429341,
+      "Enterobacter cloacae complex (CRE)": 0.430072,
+      "Neisseria gonorrhoeae": 0.468424
+    }
+  }
+}

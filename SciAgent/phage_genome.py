@@ -607,8 +607,14 @@ def extract_cds_from_gtf(genome_fasta: str, gtf_path: str,
         tid = None
         for token in attrs.split(";"):
             token = token.strip()
-            if token.startswith("transcript_id"):
+            if token.startswith("transcript_id"):  # GTF style: transcript_id "x"
                 tid = token.split(" ")[1].strip('"')
+                break
+            if token.startswith("Parent="):  # GFF3 style: group CDS by parent
+                tid = token.split("=", 1)[1]
+                break
+            if token.startswith("ID=cds-") or token.startswith("ID=CDS"):
+                tid = token.split("=", 1)[1]
                 break
         if not tid:
             continue
