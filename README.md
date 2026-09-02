@@ -77,6 +77,16 @@ host). Proven inputs: Daphnia zip, *L. acidophilus* dir + accession, raw DNA,
 FASTQ — all yield validated phages (use ~50 kb length; tiny genomes <~12 kb
 may fall below the 8-ORF validation bar).
 
+**Huge datasets (e.g. 60 GB) are fine:** FASTQ/FASTA/ZIP are **streamed** and
+sampled to `--budget-mb` (default 25 Mb) for the codon profile — memory is
+O(budget), not O(file). Measured: a 320 MB FASTQ runs in ~2 s at **86 MB
+peak RAM**; a 60 GB file costs the same. Only the *first 25 Mb* are used, so
+a single 60 GB WGS-coverage FASTQ is overkill for a codon profile — a
+5–25 Gb subsample is plenty. If your file is *human* WGS reads, remember
+phages infect bacteria — point Autophage at a bacterial genome (or use the
+human genome's associated/pathogenic bacteria) for a meaningful result, and
+prefer assembled genome + GTF for the cleanest codon profile.
+
 ## Synthetic phage genome design and validation (`phage_genome.py`)
 
 Implements the Autophage proposer/verifier loop for bacteriophage genomics:

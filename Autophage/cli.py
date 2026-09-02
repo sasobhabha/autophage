@@ -47,6 +47,7 @@ from build_daphnia_phage import (               # noqa: E402
 )
 
 OUT_DIR = Path(__file__).parent / "outputs"
+BUDGET_BP = 25_000_000  # max bases read from a dataset (huge files are sampled)
 ACCESSION_RE = re.compile(r"^(GCF_|GCA_|NC_|NZ_|NT_|NW_|CP\d{6})(\.\d+)?")
 DNA_RE = re.compile(r"^[ACGTNacgtnueryswkmbdhvUERYSWKMBDHV]+$")
 
@@ -104,13 +105,26 @@ def read_fasta_records(text: str):
         yield name, "".join(buf)
 
 
-def read_fastq_records(path: Path):
-    """Yield (name, seq) from a FASTQ file (4-line blocks)."""
+def read_fastq_records(path: Path, max_bp: int = 0):
+    """Stream FASTQ records (4-line blocks) without loading the file.
+
+    Stops once `max_bp` bases have been yielded (0 = unlimited). Keeps
+    memory flat even for multi-GB FASTQ files.
+    """
+    seen = 0
     with open(path) as f:
-        lines = f.read().splitlines()
-    for i in range(0, len(lines) - 3, 4):
-        if lines[i].startswith("@"):
-            yield lines[i][1:].split()[0], lines[i + 1].strip().upper()
+        while True:
+            hdr = f.readline()
+            seq = f.readline()
+            f.readline()  # '+'
+            f.readline()  # quality
+            if not hdr or not seq:
+                break
+            if hdr.startswith("@"):
+                yield hdr[1:].split()[0], seq.strip().upper()
+                seen += len(seq) - 1
+                if max_bp and seen >= max_bp:
+                    break
 
 
 def parse_gb_location(loc: str):
@@ -191,6 +205,11 @@ def discover_dir(directory: Path, tmp: Path | None = None) -> InputDataset:
         if ext in ANNOT_EXTS:
             annots.append(p)
     if not genome_candidates:
+        fastqs = [p for p in files if p.suffix.lower() in FASTQ_EXTS]
+        if fastqs:
+            fq = max(fastqs, key=lambda p: p.stat().st_size)
+            out(f"  [dir] no genome FASTA; sampling reads from {fq.name}")
+            return load_fastq(fq, BUDGET_BP)
         raise ValueError(f"no genome FASTA found in {directory}")
     genome = max(genome_candidates, key=lambda p: p.stat().st_size)
     gtf = next((a for a in annots if a.stem.split(".")[0] == genome.stem.split(".")[0]), None)
@@ -202,56 +221,110 @@ def discover_dir(directory: Path, tmp: Path | None = None) -> InputDataset:
                         cds_fasta=cds_fa, tmpdir=None)
 
 
-def load_zip(path: Path) -> InputDataset:
+def load_zip(path: Path, budget_bp: int) -> InputDataset:
+    """Extract only what's needed from a ZIP (streamed), so a huge archive
+    costs O(needed files) disk + O(budget) memory."""
     tmp = Path(tempfile.mkdtemp(prefix="autophage_"))
-    want = GENOME_EXTS | ANNOT_EXTS | GB_EXTS | FASTQ_EXTS
+    want = GENOME_EXTS | ANNOT_EXTS | GB_EXTS
     with zipfile.ZipFile(path) as zf:
         for member in zf.namelist():
             if member.endswith("/"):
                 continue
             ext = Path(member).suffix.lower()
-            if ext in want or member.lower().endswith(".fa"):
-                dest = tmp / member
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_bytes(zf.read(member))
-    ds = discover_dir(tmp)
-    ds.tmpdir = tmp  # take ownership for cleanup
+            if ext in want:
+                dest = tmp / Path(member).name
+                with zf.open(member) as src, open(dest, "wb") as dst:
+                    shutil.copyfileobj(src, dst, length=1 << 20)
+    # genome+annotation found? use them. otherwise fall back to reads.
+    fastqs = [m for m in zf.namelist()
+              if Path(m).suffix.lower() in FASTQ_EXTS]
+    try:
+        ds = discover_dir(tmp)
+    except ValueError:
+        if not fastqs:
+            raise ValueError(f"no genome/annotation/reads found in {path}")
+        fq = max(fastqs, key=lambda m: zf.getinfo(m).file_size)
+        out(f"  [zip] no genome found; sampling reads from {Path(fq).name}")
+        with zipfile.ZipFile(path) as zf:
+            with zf.open(fq) as src:
+                tmp_fq = tmp / "reads.fastq"
+                with open(tmp_fq, "wb") as dst:
+                    shutil.copyfileobj(src, dst, length=1 << 20)
+        ds = load_fastq(tmp_fq, budget_bp)
     ds.kind = "zip"
+    ds.tmpdir = tmp  # take ownership for cleanup
     return ds
 
 
-def load_fastq(path: Path) -> InputDataset:
+def load_fastq(path: Path, budget_bp: int) -> InputDataset:
+    """Stream a FASTQ into a capped genome FASTA (O(budget) memory), so a
+    60 GB reads file costs only the profile budget of RAM."""
     tmp = Path(tempfile.mkdtemp(prefix="autophage_"))
-    records = list(read_fastq_records(path))
-    total = sum(len(s) for _, s in records)
     genome_fa = tmp / "genome.fasta"
-    _write_fasta(genome_fa, records)
-    ds = InputDataset(name=path.stem, kind="fastq", genome_fasta=genome_fa,
-                      tmpdir=tmp)
-    out(f"  [fastq] {len(records)} reads, {total:,} bp concatenated")
-    return ds
+    n_reads = total = 0
+    truncated = False
+    with open(genome_fa, "w") as g:
+        for name, seq in read_fastq_records(path, max_bp=budget_bp):
+            g.write(f">{name}\n{seq}\n")
+            n_reads += 1
+            total += len(seq)
+        if budget_bp and total >= budget_bp:
+            truncated = True
+    note = f" (first {total:,} bp used; file is larger)" if truncated else ""
+    out(f"  [fastq] {n_reads} reads, {total:,} bp sampled{note}")
+    return InputDataset(name=path.stem, kind="fastq",
+                        genome_fasta=genome_fa, tmpdir=tmp)
 
 
-def load_plain(path: Path) -> InputDataset:
-    tmp = Path(tempfile.mkdtemp(prefix="autophage_"))
+def _stream_fasta_to(path: Path, dest: Path, budget_bp: int):
+    """Stream a (optionally gzipped) FASTA into dest, capped at budget bp.
+    Returns (first_record_name, records, truncated)."""
     raw = gzip.open(path, "rt") if path.suffix.lower() == ".gz" else open(path)
-    text = raw.read()
-    raw.close()
-    if text.lstrip().startswith(">"):
-        records = list(read_fasta_records(text))
-        genome_fa = tmp / "genome.fasta"
-        _write_fasta(genome_fa, records)
-        name = records[0][0]
-        # sibling annotation with the same stem?
-        gtf = None
-        for ext in ANNOT_EXTS:
-            cand = path.with_suffix(ext)
-            if cand.exists():
-                gtf = cand
-                break
-        return InputDataset(name=name, kind="fasta", genome_fasta=genome_fa,
-                            gtf_path=gtf, tmpdir=tmp)
-    raise ValueError(f"could not parse {path} as FASTA")
+    name, buf = None, []
+    n_recs = written = 0
+    truncated = False
+    with raw, open(dest, "w") as g:
+        for line in raw:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith(">"):
+                if name:
+                    g.write(f">{name}\n{''.join(buf)}\n")
+                    n_recs += 1
+                    written += len(buf)
+                    if written >= budget_bp:
+                        truncated = True
+                        break
+                name, buf = line[1:].strip().split()[0], []
+            else:
+                buf.append(line.upper())
+        else:
+            if name:
+                g.write(f">{name}\n{''.join(buf)}\n")
+                n_recs += 1
+    return (name or "record", n_recs, truncated)
+
+
+def load_plain(path: Path, budget_bp: int) -> InputDataset:
+    tmp = Path(tempfile.mkdtemp(prefix="autophage_"))
+    genome_fa = tmp / "genome.fasta"
+    try:
+        name, n_recs, truncated = _stream_fasta_to(path, genome_fa, budget_bp)
+    except Exception:
+        raise ValueError(f"could not parse {path} as FASTA")
+    if truncated:
+        out(f"  [fasta] {n_recs} record(s), first {budget_bp:,} bp retained "
+            f"(file is larger — sampling is sufficient for a codon profile)")
+    # sibling annotation with the same stem?
+    gtf = None
+    for ext in ANNOT_EXTS:
+        cand = path.with_suffix(ext)
+        if cand.exists():
+            gtf = cand
+            break
+    return InputDataset(name=name, kind="fasta", genome_fasta=genome_fa,
+                        gtf_path=gtf, tmpdir=tmp)
 
 
 def load_accession(acc: str) -> InputDataset:
@@ -287,19 +360,19 @@ def looks_like_dna(text: str) -> bool:
     return len(clean) >= 60 and len(DNA_RE.sub("", clean)) <= len(clean) * 0.02
 
 
-def load_dataset(raw: str) -> InputDataset:
+def load_dataset(raw: str, budget_bp: int = BUDGET_BP) -> InputDataset:
     p = Path(raw)
     if p.exists():
         if p.is_dir():
             return discover_dir(p)
         ext = p.suffix.lower()
         if ext == ".zip" or zipfile.is_zipfile(p):
-            return load_zip(p)
+            return load_zip(p, budget_bp)
         if ext in GB_EXTS:
             return parse_genbank(p)
         if ext in FASTQ_EXTS:
-            return load_fastq(p)
-        return load_plain(p)
+            return load_fastq(p, budget_bp)
+        return load_plain(p, budget_bp)
     if ACCESSION_RE.match(raw.strip()):
         return load_accession(raw.strip())
     if looks_like_dna(raw):
@@ -417,7 +490,7 @@ Type "exit" to quit, "help" for this text.
 """
 
 
-def interactive() -> int:
+def interactive(budget_bp: int = BUDGET_BP) -> int:
     out("==================================================================")
     out("   Autophage — read any genetic dataset, output a phage")
     out("==================================================================")
@@ -439,7 +512,7 @@ def interactive() -> int:
         ds = None
         try:
             t0 = time.time()
-            ds = load_dataset(raw)
+            ds = load_dataset(raw, budget_bp)
             result = build_phage(ds)
             out(f"\n===== PHAGE OUTPUT STRING ({result['length']:,} bp, "
                 f"validated={result['validated']}) [{time.time()-t0:.0f}s] =====")
@@ -455,7 +528,7 @@ def make_cmd(args: argparse.Namespace) -> int:
     ds = None
     try:
         t0 = time.time()
-        ds = load_dataset(args.input)
+        ds = load_dataset(args.input, budget_bp=int(args.budget_mb * 1e6))
         result = build_phage(ds, length=args.length, seed=args.seed)
         out("\n===== PHAGE OUTPUT STRING =====")
         out(phage_fasta_string(result))
@@ -483,14 +556,19 @@ def main(argv=None) -> int:
     m.add_argument("--input", required=True)
     m.add_argument("--length", type=int, default=50_000)
     m.add_argument("--seed", type=int, default=7)
+    m.add_argument("--budget-mb", type=int, default=25,
+                   help="max MB of a large dataset to read for the codon "
+                        "profile (60 GB files are sampled, not loaded)")
     m.add_argument("--out-prefix", default=None,
                    help="also write <prefix>.fasta/.gff3/.json into outputs/")
     m.set_defaults(func=make_cmd)
+    p.add_argument("--budget-mb", type=int, default=25,
+                   help="max MB read from a dataset (interactive mode)")
 
     args = p.parse_args(argv)
     if args.command == "make":
         return args.func(args)
-    return interactive()  # no subcommand -> interactive session
+    return interactive(budget_bp=int(args.budget_mb * 1e6))
 
 
 if __name__ == "__main__":

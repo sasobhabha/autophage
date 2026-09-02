@@ -44,6 +44,22 @@ class TestFastqLoader(unittest.TestCase):
             self.assertEqual(ds.genome_fasta.read_text().count(">"), 1)
             ds.cleanup()
 
+    def test_fastq_stream_budget(self):
+        import tempfile as tf
+        with tf.NamedTemporaryFile("w", suffix=".fastq", delete=False) as f:
+            for i in range(20):
+                f.write(f"@r{i}\nACGTACGTACGTACGT\n+\n{'I' * 16}\n")
+            name = f.name
+        try:
+            recs = list(read_fastq_records(Path(name), max_bp=40))
+            self.assertTrue(len(recs) >= 1)
+            self.assertLessEqual(sum(len(s) for _, s in recs), 60 + 16)
+            # unlimited reads everything
+            all_recs = list(read_fastq_records(Path(name)))
+            self.assertEqual(len(all_recs), 20)
+        finally:
+            Path(name).unlink()
+
 
 class TestGenBankLoader(unittest.TestCase):
     def test_parse_gb_location(self):
