@@ -191,6 +191,28 @@ screened (next best 0.313, MRSA)** — the designed phage is k-mer-adapted to
 its intended host. NCBI GFF3 CDS extraction is supported in addition to
 GTF.
 
+### Can I just hand it any genome? Yes.
+
+Drop a FASTA in a directory (no annotation needed) and run
+`batch_any_genome.py` — the codon profile is then estimated directly from
+the genome sequence. Proven on 10 real reference genomes of priority
+antibiotic-resistant bacteria spanning **33–67% GC**
+(`outputs/any_genome_batch.json`): **10/10 produced a fully VALIDATED
+phage**, with 100% protein production, mean CAI 0.68–0.81 vs each host, and
+d2\* 0.31–0.46 vs each host's own genome.
+
+```bash
+.venv/bin/python SciAgent/batch_any_genome.py --dir /tmp/host_cache \
+    --out SciAgent/outputs/any_genome_batch.json
+```
+
+Both caveats: (1) *bacterio*phages infect bacteria/archaea — for a
+eukaryotic "host" (e.g. Daphnia itself) the pipeline still produces a
+codon-adapted, validated genome, but the biology is only meaningful against
+the host's bacteria (as in the Daphnia/∗Pasteuria ramosa∗ case above);
+(2) "validated" is in-silico phage biology + host adaptation — infectivity
+is always settled in the wet lab.
+
 ## Test
 
 ```bash

@@ -43,8 +43,8 @@ from phage_genome import (                     # noqa: E402
     extract_cds_from_gtf,
 )
 from host_compat import (                      # noqa: E402
-    codon_usage_from_cds, codon_adaptation_index,
-    d2star, screen_compatibility, gc_content,
+    codon_usage_from_cds, codon_usage_from_genome_sequence,
+    codon_adaptation_index, d2star, screen_compatibility, gc_content,
 )
 
 ROOT = Path(__file__).parent
@@ -96,8 +96,13 @@ def genome_gc_sample(path: Path, n_bp: int = 20_000_000) -> float:
     return gc_content(first_n_bp(path, n_bp))
 
 
+DEFAULT_GENOME = str(DATA / "Daphnia_magna_NIES_genome.fa")
+DEFAULT_CDS = str(DATA / "Daphnia_magna_NIES_cds.fa")
+
+
 def build_codon_usage(args) -> dict:
-    """Codon-usage profile from GTF-extracted CDS, or a CDS FASTA directly."""
+    """Codon-usage profile: GTF-extracted CDS, explicit CDS FASTA, or (for
+    any bare genome FASTA) estimated directly from the genome sequence."""
     if args.gtf:
         cds_list = extract_cds_from_gtf(args.genome_fasta, args.gtf)
         tmp = OUT / f"__cds_{args.prefix}.fasta"
@@ -106,8 +111,14 @@ def build_codon_usage(args) -> dict:
         usage = codon_usage_from_cds(str(tmp))
         tmp.unlink(missing_ok=True)
         return usage
-    out(f"  using pre-built CDS FASTA {args.cds_fasta}")
-    return codon_usage_from_cds(str(args.cds_fasta))
+    cds = args.cds_fasta
+    if not cds or (cds == DEFAULT_CDS and args.genome_fasta != DEFAULT_GENOME):
+        # bare foreign genome without annotation: estimate usage from sequence
+        out("  no CDS annotation; estimating codon usage from genome sequence")
+        return codon_usage_from_genome_sequence(
+            first_n_bp(Path(args.genome_fasta), 5_000_000))
+    out(f"  using pre-built CDS FASTA {cds}")
+    return codon_usage_from_cds(str(cds))
 
 
 def annotate(seq: str, host_usage: dict) -> list:
@@ -173,8 +184,10 @@ def parse_args(argv=None) -> argparse.Namespace:
     p.add_argument("--genome-fasta", default=str(DATA / "Daphnia_magna_NIES_genome.fa"))
     p.add_argument("--gtf", default=None,
                    help="GTF/GFF annotation to extract CDS from")
-    p.add_argument("--cds-fasta", default=str(DATA / "Daphnia_magna_NIES_cds.fa"),
-                   help="pre-built CDS FASTA (used when --gtf is not given)")
+    p.add_argument("--cds-fasta", default=DEFAULT_CDS,
+                   help="pre-built CDS FASTA (used when --gtf is not given; "
+                        "for a bare foreign genome without annotation the "
+                        "host's own sequence is used)")
     p.add_argument("--pathogen-fasta",
                    default=str(ROOT / "data" / "hosts"
                                / "Pasteuria_ramosa_GCF_056496825.1.fasta"),
@@ -204,8 +217,10 @@ def main(argv=None) -> int:
     out(f"  host genome GC (20 Mb sample): {host_gc:.3f}")
 
     out("\n== 2. Design: host-adapted DNA ==")
+    # clamp to the validated GC range [0.25, 0.70]
+    gc_target = min(0.70, max(0.25, host_gc - 0.05))
     genome = generate_phage_genome(
-        length=args.length, gc_target=max(0.25, host_gc - 0.05),
+        length=args.length, gc_target=gc_target,
         seed=args.seed, terminal_repeat=200, rbs_fraction=0.9,
         name=genome_name, host_codon_usage=host_usage,
     )
