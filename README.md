@@ -54,6 +54,29 @@ python3 -m venv .venv && .venv/bin/pip install torch numpy
 .venv/bin/python Autophage/phage_genome.py proteins --input synthetic_phage.fasta  # test protein production
 ```
 
+## Interactive CLI — read any dataset, output a phage (`autophage.sh`)
+
+```bash
+./autophage.sh                       # interactive session: type anything, get a phage
+./autophage.sh make --input <X>      # one-shot: dataset in -> phage FASTA string out
+./autophage.sh make --input <X> --out-prefix my_phage   # + write .fasta/.gff3/.json
+```
+
+`<X>` can be **any** of these (auto-detected):
+
+- a FASTA / FASTQ / GenBank (.gb/.gbk/.gbff) / gzipped file
+- a **directory** of files (genome + GTF/GFF or CDS FASTA found automatically)
+- a **ZIP archive** — e.g. the raw *D. magna* NIES dataset zip works as-is
+- a **pasted DNA string** (60+ bp) — no file needed
+- an **NCBI accession** (`GCA_000934625.1`, `NC_001604.1`, …) — fetched live
+
+The tool parses the dataset (auto-detects annotation → codon profile),
+designs the host-adapted phage, and prints the complete genome string plus a
+verification summary (biology checks, protein production, CAI, d2\* vs the
+host). Proven inputs: Daphnia zip, *L. acidophilus* dir + accession, raw DNA,
+FASTQ — all yield validated phages (use ~50 kb length; tiny genomes <~12 kb
+may fall below the 8-ORF validation bar).
+
 ## Synthetic phage genome design and validation (`phage_genome.py`)
 
 Implements the Autophage proposer/verifier loop for bacteriophage genomics:

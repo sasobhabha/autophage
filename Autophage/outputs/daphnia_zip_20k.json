@@ -1,0 +1,14 @@
+{
+  "name": "phage_Daphnia_magna_NIES_genome",
+  "kind": "zip",
+  "source": "Daphnia_magna_NIES_genome",
+  "length": 19900,
+  "gc": 0.4694,
+  "validated": true,
+  "failed_checks": [],
+  "orfs": 32,
+  "full_proteins": 32,
+  "protein_fraction": 1.0,
+  "mean_cai": 0.85,
+  "d2star_vs_host": 0.4577
+}

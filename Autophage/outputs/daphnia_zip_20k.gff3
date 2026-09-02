@@ -1,0 +1,35 @@
+##gff-version 3
+##sequence-region phage_Daphnia_magna_NIES_genome 1 19900
+phage_Daphnia_magna_NIES_genome	Autophage	transit_peptide	1	200	.	+	.	ID=TR001;product=direct terminal repeat (packaging signal)
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	57	443	.	+	0	ID=g001;product=single-subunit RNA polymerase;cai=0.878
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	520	993	.	+	0	ID=g002;product=DNA polymerase;cai=0.834
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	1361	1756	.	+	0	ID=g003;product=helicase-primase;cai=0.864
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	1785	2936	.	+	0	ID=g004;product=DNA ligase;cai=0.863
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	2906	5503	.	+	0	ID=g005;product=5'->3' exonuclease;cai=0.841
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	3082	3558	.	-	0	ID=g006;product=anti-restriction protein;cai=0.855
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	4846	5547	.	-	0	ID=g007;product=DNA methyltransferase;cai=0.824
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	6029	6772	.	+	0	ID=g008;product=ATP-dependent DNA translocase;cai=0.847
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	7020	7793	.	+	0	ID=g009;product=single-subunit RNA polymerase;cai=0.859
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	7859	9487	.	+	0	ID=g010;product=DNA polymerase;cai=0.861
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	8167	8469	.	-	0	ID=g011;product=DNA methyltransferase;cai=0.864
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	9016	9321	.	-	0	ID=g012;product=repressor;cai=0.834
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	9549	9860	.	+	0	ID=g013;product=scaffold protein;cai=0.843
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	9926	10792	.	+	0	ID=g014;product=major capsid protein;cai=0.84
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	10869	11465	.	+	0	ID=g015;product=minor capsid protein;cai=0.841
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	11682	11987	.	-	0	ID=g016;product=repressor;cai=0.846
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	11740	12618	.	+	0	ID=g017;product=tail tubular protein A;cai=0.815
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	12678	13325	.	+	0	ID=g018;product=tail tubular protein B;cai=0.849
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	13663	15102	.	+	0	ID=g019;product=tail assembly protein;cai=0.873
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	13912	14250	.	-	0	ID=g020;product=repressor;cai=0.866
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	14320	14778	.	-	0	ID=g021;product=transcriptional regulator;cai=0.87
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	15023	15349	.	-	0	ID=g022;product=anti-restriction protein;cai=0.82
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	15123	15695	.	+	0	ID=g023;product=scaffold protein;cai=0.843
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	15738	17183	.	+	0	ID=g024;product=major capsid protein;cai=0.854
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	16605	16973	.	-	0	ID=g025;product=transcriptional regulator;cai=0.882
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	16660	17004	.	+	0	ID=g026;product=tail spike protein;cai=0.824
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	17264	17596	.	+	0	ID=g027;product=internal virion protein;cai=0.869
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	17584	17958	.	+	0	ID=g028;product=holin;cai=0.88
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	18024	18830	.	+	0	ID=g029;product=endolysin;cai=0.857
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	18861	19181	.	-	0	ID=g030;product=anti-restriction protein;cai=0.876
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	18888	19640	.	+	0	ID=g031;product=tail fiber protein;cai=0.857
+phage_Daphnia_magna_NIES_genome	Autophage	CDS	18892	19218	.	+	0	ID=g032;product=tail spike protein;cai=0.78
