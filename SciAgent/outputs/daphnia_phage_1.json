@@ -1,0 +1,65 @@
+{
+  "name": "phage_Dm_alpha",
+  "length": 49787,
+  "gc": 0.4662,
+  "genes_annotated": 64,
+  "validation_passed": true,
+  "validation": {
+    "alphabet": {
+      "passed": true,
+      "detail": "only A/C/G/T"
+    },
+    "length": {
+      "passed": true,
+      "detail": "49787 bp (expected 5000-700000)"
+    },
+    "gc_content": {
+      "passed": true,
+      "detail": "gc=0.466 (expected 0.25-0.70)"
+    },
+    "coding_density": {
+      "passed": true,
+      "detail": "0.931 of bases inside ORFs (min 0.5)"
+    },
+    "orf_count": {
+      "passed": true,
+      "detail": "64 ORFs >= 300 bp (min 8)"
+    },
+    "rbs_fraction": {
+      "passed": true,
+      "detail": "0.731 of forward ORFs have Shine-Dalgarno upstream (min 0.3)"
+    },
+    "terminal_repeats": {
+      "passed": true,
+      "detail": "direct terminal repeat of 200 bp found"
+    }
+  },
+  "protein_production": {
+    "orfs": 64,
+    "full_proteins": 64,
+    "truncated": 0,
+    "fraction": 1.0,
+    "mean_protein_len": 267.1
+  },
+  "cai": {
+    "mean": 0.849,
+    "min": 0.81,
+    "max": 0.884
+  },
+  "d2star": {
+    "Daphnia_magna_genome": 0.4292,
+    "Pasteuria_ramosa": 0.3965,
+    "superbugs": {
+      "Staphylococcus aureus (MRSA)": 0.395937,
+      "Klebsiella pneumoniae (CRE)": 0.403318,
+      "Mycobacterium tuberculosis (MDR-TB)": 0.413112,
+      "Pseudomonas aeruginosa (MDR/XDR)": 0.413171,
+      "Enterococcus faecium (VRE)": 0.413285,
+      "Enterobacter cloacae complex (CRE)": 0.417695,
+      "Escherichia coli (ESBL)": 0.427965,
+      "Salmonella enterica (MDR)": 0.429544,
+      "Acinetobacter baumannii (CRAB)": 0.435491,
+      "Neisseria gonorrhoeae": 0.457906
+    }
+  }
+}

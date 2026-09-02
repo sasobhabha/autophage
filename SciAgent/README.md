@@ -157,6 +157,18 @@ fits (the gradient-accumulation + AMP + checkpointing above), and scale data
 and parameters together on a GPU cluster. The host-conditioned designer in
 `phage_genome.py` is the practical way to get a host-specific phage right now.
 
+## Daphnia end-to-end: complete phage + lab-trial plan
+
+`build_daphnia_phage.py` builds the **complete, annotated 49.8 kb genome**
+from the full dataset (31,317 *D. magna* CDS codon profile + whole genome)
+and machine-verifies it: all phage-biology checks pass, 100% of ORFs
+produce proteins, mean codon-adaptation index 0.849 vs Daphnia, and d2\* =
+0.397 vs the real *Pasteuria ramosa* genome (the bacterium that sterilizes
+Daphnia in labs) — the lab-trial target. Outputs land in `outputs/`
+(FASTA + GFF3 + JSON), with the full trial protocol in
+`DAPHNIA_PHAGE_LAB_TRIAL.md`. Honest limit: in-silico adaptation is a
+plausibility signal; infectivity must be proven in the wet lab.
+
 ## Test
 
 ```bash

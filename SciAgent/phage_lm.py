@@ -417,10 +417,13 @@ class PhageDataset(torch.utils.data.Dataset):
 
 @torch.no_grad()
 def evaluate(model: nn.Module, loader: torch.utils.data.DataLoader,
-             device: str) -> float:
+             device: str, max_batches: int = 200) -> float:
+    """Mean loss over a sample of the loader (fast enough to run in-loop)."""
     model.eval()
     total, cnt = 0.0, 0
-    for x, y in loader:
+    for i, (x, y) in enumerate(loader):
+        if i >= max_batches:
+            break
         x, y = x.to(device), y.to(device)
         _, loss = model(x, targets=y)
         total += loss.item() * x.size(0)
@@ -474,10 +477,13 @@ def train_lm(data_dir: str, out_path: str, epochs: int = 3,
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     best_val = float("inf")
     step = 0
+    run_loss = 0.0
+    run_cnt = 0
+    eval_every = 100
     for epoch in range(epochs):
         model.train()
         t0 = time.time()
-        run_loss = 0.0
+        epo_loss, epo_cnt = 0.0, 0
         opt.zero_grad(set_to_none=True)
         accum = 0
         for x, y in train_loader:
@@ -494,6 +500,9 @@ def train_lm(data_dir: str, out_path: str, epochs: int = 3,
             loss = loss / grad_accum
             loss.backward()
             run_loss += loss.item() * grad_accum
+            run_cnt += 1
+            epo_loss += loss.item() * grad_accum
+            epo_cnt += 1
             accum += 1
             if accum % grad_accum == 0:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -502,11 +511,14 @@ def train_lm(data_dir: str, out_path: str, epochs: int = 3,
             step += 1
             if max_steps and step >= max_steps:
                 break
-            if step % 25 == 0:
-                val = evaluate(model, val_loader, device)
+            if step % 50 == 0:
                 print(f"  step {step:5d} lr {lr_at(step):.2e} "
-                      f"train {run_loss/max(1,(step % steps_per_epoch or steps_per_epoch)):.4f} "
-                      f"val {val:.4f} ({time.time()-t0:.1f}s)")
+                      f"train {run_loss/max(1,run_cnt):.4f} "
+                      f"({time.time()-t0:.0f}s)", flush=True)
+                run_loss, run_cnt = 0.0, 0
+            if step % eval_every == 0:
+                val = evaluate(model, val_loader, device)
+                print(f"  step {step:5d} VAL {val:.4f}", flush=True)
                 if val < best_val:
                     best_val = val
                     torch.save({"model": model.state_dict(),
@@ -515,7 +527,8 @@ def train_lm(data_dir: str, out_path: str, epochs: int = 3,
                                            "vocab_size": tok.vocab_size}},
                                out_path)
         val = evaluate(model, val_loader, device)
-        print(f"[epoch {epoch+1}/{epochs}] val {val:.4f}")
+        print(f"[epoch {epoch+1}/{epochs}] val {val:.4f} "
+              f"(train avg {epo_loss/max(1,epo_cnt):.4f})")
         if val < best_val:
             best_val = val
             torch.save({"model": model.state_dict(),
