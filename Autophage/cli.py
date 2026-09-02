@@ -8,8 +8,13 @@ verifiably phage-like genome string.
 
 Usage:
     ./autophage.sh                  # interactive session (paste/type anything)
-    ./autophage.sh make --input <X> # one-shot; prints the phage FASTA string
+    ./autophage.sh make --input <X> # one-shot: prints the string AND writes
+                                    #    outputs/<name>.fasta/.gff3/.json
+    ./autophage.sh make --input <X> --no-files   # print only, no files
     # (note: macOS case-insensitive FS requires .sh to avoid the Autophage/ dir)
+
+Every run writes a real FASTA file (plus GFF3 + JSON) into Autophage/outputs/,
+named after the host genome, unless --no-files is given.
 
 Examples of <X>:
     genome.fasta  reads.fastq  genome.gbk  dataset.zip  some/folder/
@@ -452,6 +457,10 @@ def build_phage(ds: InputDataset, length: int = 50_000, seed: int = 7,
     }
 
 
+def sanitize(name: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", name or "phage")
+
+
 def phage_fasta_string(result: dict) -> str:
     seq = result["sequence"]
     lines = [f">{result['name']} | Autophage synthetic {result['kind']}-adapted "
@@ -464,6 +473,7 @@ def phage_fasta_string(result: dict) -> str:
 def write_outputs(result: dict, prefix: str) -> None:
     OUT_DIR.mkdir(exist_ok=True)
     (OUT_DIR / f"{prefix}.fasta").write_text(phage_fasta_string(result) + "\n")
+    out(f"  saved {OUT_DIR / (prefix + '.fasta')}")
     with open(OUT_DIR / f"{prefix}.gff3", "w") as f:
         f.write("##gff-version 3\n")
         f.write(f"##sequence-region {result['name']} 1 {result['length']}\n")
@@ -486,13 +496,15 @@ HELP = """Autophage: give me any genome, I'll write you a phage.
   - a path:  genome.fasta  reads.fastq  genome.gbk  data.zip  some/folder/
   - an NCBI accession:  GCA_000934625.1  NC_001604.1
   - paste 60+ bp of DNA directly
-Type "exit" to quit, "help" for this text.
+Each run prints the FASTA string and saves it (plus .gff3/.json) to
+Autophage/outputs/. Type "exit" to quit, "help" for this text.
 """
 
 
 def interactive(budget_bp: int = BUDGET_BP) -> int:
     out("==================================================================")
     out("   Autophage — read any genetic dataset, output a phage")
+    out("   (each run saves outputs/<name>.fasta + .gff3 + .json)")
     out("==================================================================")
     out(HELP)
     while True:
@@ -517,6 +529,7 @@ def interactive(budget_bp: int = BUDGET_BP) -> int:
             out(f"\n===== PHAGE OUTPUT STRING ({result['length']:,} bp, "
                 f"validated={result['validated']}) [{time.time()-t0:.0f}s] =====")
             out(phage_fasta_string(result))
+            write_outputs(result, sanitize(result["name"]))
         except Exception as exc:
             out(f"  ! {exc}")
         finally:
@@ -532,8 +545,11 @@ def make_cmd(args: argparse.Namespace) -> int:
         result = build_phage(ds, length=args.length, seed=args.seed)
         out("\n===== PHAGE OUTPUT STRING =====")
         out(phage_fasta_string(result))
-        if args.out_prefix:
-            write_outputs(result, args.out_prefix)
+        if not args.no_files:
+            prefix = args.out_prefix or sanitize(result["name"])
+            write_outputs(result, prefix)
+        else:
+            out("  (--no-files: nothing written to disk)")
         out(f"\n[{time.time()-t0:.0f}s] validation_passed={result['validated']} "
             f"| full_proteins={result['full_proteins']}/{result['orfs']} | "
             f"mean_cai={result['mean_cai']} | d2*_vs_host={result['d2star_vs_host']}")
@@ -560,7 +576,10 @@ def main(argv=None) -> int:
                    help="max MB of a large dataset to read for the codon "
                         "profile (60 GB files are sampled, not loaded)")
     m.add_argument("--out-prefix", default=None,
-                   help="also write <prefix>.fasta/.gff3/.json into outputs/")
+                   help="write <prefix>.fasta/.gff3/.json into outputs/ "
+                        "(default: named after the host genome)")
+    m.add_argument("--no-files", action="store_true",
+                   help="only print the FASTA string; write nothing to disk")
     m.set_defaults(func=make_cmd)
     p.add_argument("--budget-mb", type=int, default=25,
                    help="max MB read from a dataset (interactive mode)")

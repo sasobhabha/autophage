@@ -93,6 +93,44 @@ class TestGenBankLoader(unittest.TestCase):
             ds.cleanup()
 
 
+class TestFileOutput(unittest.TestCase):
+    def test_write_outputs_creates_fasta(self):
+        import argparse
+        import cli
+        with tempfile.TemporaryDirectory() as td:
+            cli.OUT_DIR = Path(td)
+            result = cli.build_phage(
+                cli.load_dataset("ATGC" * 40 + "TAGG" * 40),
+                length=10_000, seed=1, verbose=False)
+            cli.write_outputs(result, "demo_phage")
+            for ext in (".fasta", ".gff3", ".json"):
+                self.assertTrue((Path(td) / ("demo_phage" + ext)).exists())
+            fasta = (Path(td) / "demo_phage.fasta").read_text()
+            self.assertTrue(fasta.startswith(">"))
+            body = "".join(l for l in fasta.splitlines()
+                            if not l.startswith(">") and l.strip())
+            # generator lands slightly under the target (tail gene truncated)
+            self.assertEqual(len(body), result["length"])
+            self.assertGreaterEqual(len(body), 8_000)
+            self.assertTrue("Autophage" in fasta)
+
+    def test_make_cmd_writes_by_default(self):
+        import argparse
+        import cli
+        with tempfile.TemporaryDirectory() as td:
+            cli.OUT_DIR = Path(td)
+            inp = Path(td) / "g.fasta"
+            inp.write_text(">g\n" + "ATGC" * 400 + "\n")
+            args = argparse.Namespace(input=str(inp), length=10_000, seed=7,
+                                      budget_mb=25, out_prefix=None,
+                                      no_files=False)
+            self.assertEqual(cli.make_cmd(args), 0)
+            # default prefix = sanitized phage name; ignore our input g.fasta
+            written = [p for p in Path(td).glob("*.fasta") if p.name != "g.fasta"]
+            self.assertEqual(len(written), 1)
+            self.assertTrue(written[0].name.startswith("phage_"))
+
+
 class TestRawDnaAndAccessionDetection(unittest.TestCase):
     def test_looks_like_dna(self):
         self.assertTrue(looks_like_dna("ACGT" * 30))

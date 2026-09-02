@@ -1,0 +1,14 @@
+{
+  "name": "phage_big",
+  "kind": "fastq",
+  "source": "big",
+  "length": 12000,
+  "gc": 0.4838,
+  "validated": true,
+  "failed_checks": [],
+  "orfs": 100,
+  "full_proteins": 100,
+  "protein_fraction": 1.0,
+  "mean_cai": 0.742,
+  "d2star_vs_host": 0.5017
+}

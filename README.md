@@ -59,8 +59,13 @@ python3 -m venv .venv && .venv/bin/pip install torch numpy
 ```bash
 ./autophage.sh                       # interactive session: type anything, get a phage
 ./autophage.sh make --input <X>      # one-shot: dataset in -> phage FASTA string out
-./autophage.sh make --input <X> --out-prefix my_phage   # + write .fasta/.gff3/.json
+./autophage.sh make --input <X> --no-files          # print only, no files
+./autophage.sh make --input <X> --out-prefix my_phage  # rename the output files
 ```
+
+**Every run writes a real FASTA file** (plus `.gff3` + `.json`) into
+`Autophage/outputs/`, named after the host genome — no flags needed.
+`--no-files` prints the string only.
 
 `<X>` can be **any** of these (auto-detected):
 

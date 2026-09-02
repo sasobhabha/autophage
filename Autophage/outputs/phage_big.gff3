@@ -1,0 +1,18 @@
+##gff-version 3
+##sequence-region phage_big 1 12000
+phage_big	Autophage	transit_peptide	1	200	.	+	.	ID=TR001;product=direct terminal repeat (packaging signal)
+phage_big	Autophage	CDS	73	525	.	+	0	ID=g001;product=single-subunit RNA polymerase;cai=1.0
+phage_big	Autophage	CDS	609	929	.	+	0	ID=g002;product=DNA polymerase;cai=1.0
+phage_big	Autophage	CDS	1001	1360	.	+	0	ID=g003;product=helicase-primase;cai=1.0
+phage_big	Autophage	CDS	1409	1885	.	+	0	ID=g004;product=DNA ligase;cai=1.0
+phage_big	Autophage	CDS	1918	2298	.	-	0	ID=g005;product=transcriptional regulator;cai=0.012
+phage_big	Autophage	CDS	1967	2845	.	+	0	ID=g006;product=terminase large subunit;cai=1.0
+phage_big	Autophage	CDS	2920	5418	.	+	0	ID=g007;product=portal protein;cai=1.0
+phage_big	Autophage	CDS	4530	4874	.	-	0	ID=g008;product=repressor;cai=0.027
+phage_big	Autophage	CDS	5437	5739	.	-	0	ID=g009;product=transcriptional regulator;cai=0.057
+phage_big	Autophage	CDS	5645	7342	.	+	0	ID=g010;product=minor capsid protein;cai=1.0
+phage_big	Autophage	CDS	7405	8220	.	+	0	ID=g011;product=head-tail connector protein;cai=1.0
+phage_big	Autophage	CDS	8273	8965	.	+	0	ID=g012;product=tail fiber protein;cai=1.0
+phage_big	Autophage	CDS	9638	10165	.	+	0	ID=g013;product=tail spike protein;cai=1.0
+phage_big	Autophage	CDS	10197	11777	.	+	0	ID=g014;product=internal virion protein;cai=1.0
+phage_big	Autophage	CDS	10239	10640	.	-	0	ID=g015;product=DNA methyltransferase;cai=0.033
