@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Data & checkpoints (regenerated / downloaded; too large for git)
+data/
+checkpoints/
+*.pt
+*.zip
+
+# macOS
+.DS_Store
