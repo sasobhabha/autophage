@@ -1,0 +1,69 @@
+##gff-version 3
+##sequence-region phage_GRCh38_genome 1 49148
+phage_GRCh38_genome	Autophage	transit_peptide	1	200	.	+	.	ID=TR001;product=direct terminal repeat (packaging signal)
+phage_GRCh38_genome	Autophage	CDS	57	1991	.	+	0	ID=g001;product=single-subunit RNA polymerase;cai=0.773
+phage_GRCh38_genome	Autophage	CDS	102	413	.	-	0	ID=g002;product=anti-restriction protein;cai=0.762
+phage_GRCh38_genome	Autophage	CDS	752	1327	.	-	0	ID=g003;product=DNA methyltransferase;cai=0.717
+phage_GRCh38_genome	Autophage	CDS	2043	2372	.	+	0	ID=g004;product=DNA ligase;cai=0.802
+phage_GRCh38_genome	Autophage	CDS	3230	3607	.	+	0	ID=g005;product=5'->3' exonuclease;cai=0.757
+phage_GRCh38_genome	Autophage	CDS	3652	3963	.	+	0	ID=g006;product=HNH homing endonuclease;cai=0.798
+phage_GRCh38_genome	Autophage	CDS	4038	4487	.	+	0	ID=g007;product=single-stranded DNA-binding protein;cai=0.762
+phage_GRCh38_genome	Autophage	CDS	4567	6510	.	+	0	ID=g008;product=ATP-dependent DNA translocase;cai=0.777
+phage_GRCh38_genome	Autophage	CDS	6580	6918	.	+	0	ID=g009;product=single-subunit RNA polymerase;cai=0.82
+phage_GRCh38_genome	Autophage	CDS	6993	8153	.	+	0	ID=g010;product=DNA polymerase;cai=0.785
+phage_GRCh38_genome	Autophage	CDS	7265	7648	.	-	0	ID=g011;product=DNA methyltransferase;cai=0.708
+phage_GRCh38_genome	Autophage	CDS	8128	8625	.	+	0	ID=g012;product=DNA ligase;cai=0.778
+phage_GRCh38_genome	Autophage	CDS	8628	8939	.	-	0	ID=g013;product=transcriptional regulator;cai=0.791
+phage_GRCh38_genome	Autophage	CDS	8658	9533	.	+	0	ID=g014;product=HNH homing endonuclease;cai=0.763
+phage_GRCh38_genome	Autophage	CDS	9579	10829	.	+	0	ID=g015;product=single-stranded DNA-binding protein;cai=0.784
+phage_GRCh38_genome	Autophage	CDS	10872	11993	.	+	0	ID=g016;product=ATP-dependent DNA translocase;cai=0.796
+phage_GRCh38_genome	Autophage	CDS	12062	12706	.	+	0	ID=g017;product=single-subunit RNA polymerase;cai=0.796
+phage_GRCh38_genome	Autophage	CDS	12779	14341	.	+	0	ID=g018;product=DNA polymerase;cai=0.794
+phage_GRCh38_genome	Autophage	CDS	13492	13875	.	-	0	ID=g019;product=DNA methyltransferase;cai=0.637
+phage_GRCh38_genome	Autophage	CDS	14576	15091	.	+	0	ID=g020;product=DNA ligase;cai=0.806
+phage_GRCh38_genome	Autophage	CDS	15076	17004	.	+	0	ID=g021;product=terminase large subunit;cai=0.77
+phage_GRCh38_genome	Autophage	CDS	17045	17431	.	+	0	ID=g022;product=portal protein;cai=0.788
+phage_GRCh38_genome	Autophage	CDS	17510	18322	.	+	0	ID=g023;product=scaffold protein;cai=0.764
+phage_GRCh38_genome	Autophage	CDS	17642	18055	.	-	0	ID=g024;product=repressor;cai=0.761
+phage_GRCh38_genome	Autophage	CDS	18322	20877	.	+	0	ID=g025;product=minor capsid protein;cai=0.785
+phage_GRCh38_genome	Autophage	CDS	19798	20106	.	-	0	ID=g026;product=anti-restriction protein;cai=0.787
+phage_GRCh38_genome	Autophage	CDS	19872	20336	.	-	0	ID=g027;product=DNA methyltransferase;cai=0.689
+phage_GRCh38_genome	Autophage	CDS	20437	20739	.	-	0	ID=g028;product=repressor;cai=0.822
+phage_GRCh38_genome	Autophage	CDS	20915	22144	.	+	0	ID=g029;product=tail assembly protein;cai=0.781
+phage_GRCh38_genome	Autophage	CDS	21793	22131	.	-	0	ID=g030;product=anti-restriction protein;cai=0.72
+phage_GRCh38_genome	Autophage	CDS	22294	24354	.	+	0	ID=g031;product=terminase large subunit;cai=0.78
+phage_GRCh38_genome	Autophage	CDS	23979	24371	.	-	0	ID=g032;product=repressor;cai=0.649
+phage_GRCh38_genome	Autophage	CDS	24190	24552	.	-	0	ID=g033;product=transcriptional regulator;cai=0.725
+phage_GRCh38_genome	Autophage	CDS	24383	24802	.	+	0	ID=g034;product=major capsid protein;cai=0.796
+phage_GRCh38_genome	Autophage	CDS	24835	25731	.	+	0	ID=g035;product=minor capsid protein;cai=0.809
+phage_GRCh38_genome	Autophage	CDS	25731	26786	.	+	0	ID=g036;product=head-tail connector protein;cai=0.785
+phage_GRCh38_genome	Autophage	CDS	26455	26802	.	+	0	ID=g037;product=tail tubular protein A;cai=0.63
+phage_GRCh38_genome	Autophage	CDS	26852	27214	.	+	0	ID=g038;product=tail tubular protein B;cai=0.744
+phage_GRCh38_genome	Autophage	CDS	27383	27694	.	-	0	ID=g039;product=DNA methyltransferase;cai=0.727
+phage_GRCh38_genome	Autophage	CDS	27524	27838	.	+	0	ID=g040;product=terminase small subunit;cai=0.819
+phage_GRCh38_genome	Autophage	CDS	27919	28650	.	+	0	ID=g041;product=terminase large subunit;cai=0.804
+phage_GRCh38_genome	Autophage	CDS	28669	29034	.	+	0	ID=g042;product=portal protein;cai=0.789
+phage_GRCh38_genome	Autophage	CDS	29074	29514	.	+	0	ID=g043;product=scaffold protein;cai=0.778
+phage_GRCh38_genome	Autophage	CDS	29542	31047	.	+	0	ID=g044;product=major capsid protein;cai=0.773
+phage_GRCh38_genome	Autophage	CDS	31047	32588	.	+	0	ID=g045;product=minor capsid protein;cai=0.792
+phage_GRCh38_genome	Autophage	CDS	31983	32489	.	-	0	ID=g046;product=anti-restriction protein;cai=0.8
+phage_GRCh38_genome	Autophage	CDS	32842	33720	.	+	0	ID=g047;product=tail tubular protein A;cai=0.776
+phage_GRCh38_genome	Autophage	CDS	34637	35113	.	+	0	ID=g048;product=tail tubular protein B;cai=0.823
+phage_GRCh38_genome	Autophage	CDS	35031	35366	.	-	0	ID=g049;product=transcriptional regulator;cai=0.645
+phage_GRCh38_genome	Autophage	CDS	35188	35817	.	+	0	ID=g050;product=tail fiber protein;cai=0.805
+phage_GRCh38_genome	Autophage	CDS	35879	38119	.	+	0	ID=g051;product=tail spike protein;cai=0.782
+phage_GRCh38_genome	Autophage	CDS	37140	37448	.	-	0	ID=g052;product=repressor;cai=0.619
+phage_GRCh38_genome	Autophage	CDS	38110	38577	.	+	0	ID=g053;product=holin;cai=0.732
+phage_GRCh38_genome	Autophage	CDS	38866	39480	.	+	0	ID=g054;product=endolysin;cai=0.796
+phage_GRCh38_genome	Autophage	CDS	39533	40654	.	+	0	ID=g055;product=spanin;cai=0.792
+phage_GRCh38_genome	Autophage	CDS	40298	40630	.	-	0	ID=g056;product=repressor;cai=0.78
+phage_GRCh38_genome	Autophage	CDS	40584	42011	.	+	0	ID=g057;product=tail spike protein;cai=0.783
+phage_GRCh38_genome	Autophage	CDS	42339	43184	.	+	0	ID=g058;product=internal virion protein;cai=0.782
+phage_GRCh38_genome	Autophage	CDS	43111	43518	.	-	0	ID=g059;product=DNA methyltransferase;cai=0.745
+phage_GRCh38_genome	Autophage	CDS	43507	44943	.	+	0	ID=g060;product=endolysin;cai=0.805
+phage_GRCh38_genome	Autophage	CDS	44994	45473	.	+	0	ID=g061;product=spanin;cai=0.797
+phage_GRCh38_genome	Autophage	CDS	45509	46312	.	+	0	ID=g062;product=tail fiber protein;cai=0.799
+phage_GRCh38_genome	Autophage	CDS	46629	47186	.	+	0	ID=g063;product=tail spike protein;cai=0.734
+phage_GRCh38_genome	Autophage	CDS	47256	48632	.	+	0	ID=g064;product=internal virion protein;cai=0.799
+phage_GRCh38_genome	Autophage	CDS	47346	47891	.	-	0	ID=g065;product=transcriptional regulator;cai=0.8
+phage_GRCh38_genome	Autophage	CDS	47522	47836	.	-	0	ID=g066;product=anti-restriction protein;cai=0.707
