@@ -11,11 +11,11 @@ import time
 
 import torch
 
-sys.path.insert(0, "SciAgent")
+sys.path.insert(0, "Autophage")
 from phage_lm import load_lm                       # noqa: E402
 from phage_genome import parse_fasta               # noqa: E402
 
-CKPT = "SciAgent/checkpoints/phage_lm_big.pt"
+CKPT = "Autophage/checkpoints/phage_lm_big.pt"
 
 model, tok = load_lm(CKPT)
 device = next(model.parameters()).device
@@ -57,7 +57,7 @@ def report(name, seq, chunks=300, seed=7):
 
 print("=== Reference 1: Daphnia magna genome (never in training; 161 Mb) ===")
 daph = parse_fasta(open(
-    "SciAgent/data/Daphnia_magna_NIES/Daphnia_magna_NIES_genome.fa").read())[1]
+    "Autophage/data/Daphnia_magna_NIES/Daphnia_magna_NIES_genome.fa").read())[1]
 report("Daphnia genome (40 Mb sampled)", daph[:40_000_000], seed=7)
 
 print("=== Reference 2: E. coli K-12 (foreign superbug, never in training) ===")
@@ -66,5 +66,5 @@ report("E. coli K-12 genome", ecoli, seed=11)
 
 print("=== Reference 3: Daphnia CDS (mostly training distribution) ===")
 cds = parse_fasta(open(
-    "SciAgent/data/Daphnia_magna_NIES/Daphnia_magna_NIES_cds.fa").read())[1]
+    "Autophage/data/Daphnia_magna_NIES/Daphnia_magna_NIES_cds.fa").read())[1]
 report("Daphnia CDS", cds, seed=3)

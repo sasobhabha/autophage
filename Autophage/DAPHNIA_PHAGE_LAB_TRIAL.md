@@ -8,7 +8,7 @@
 Build + verify with one command:
 
 ```bash
-.venv/bin/python SciAgent/build_daphnia_phage.py
+.venv/bin/python Autophage/build_daphnia_phage.py
 ```
 
 ---
@@ -66,7 +66,7 @@ Trained a 12.2M-parameter decoder-only genomic LM on the **full dataset —
 215.8 Mb**: 46 real RefSeq phage genomes + all 31,317 Daphnia CDS + the
 entire Daphnia genome, 6-mer/4096-token vocab, rotary embeddings, bf16
 AMP, gradient accumulation, held-out validation
-(`phage_lm.py train --data SciAgent/data/train_full ...`).
+(`phage_lm.py train --data Autophage/data/train_full ...`).
 
 - **Perplexity on held-out DNA**: Daphnia genome **3.9**, *P. ramosa*
   **3.9**, foreign *E. coli* **4.2** → the model compresses the Daphnia
@@ -127,14 +127,14 @@ protects *Daphnia magna* in vivo.
 
 ```bash
 # the complete design + verification (30 s, real NCBI data, cached)
-.venv/bin/python SciAgent/build_daphnia_phage.py
+.venv/bin/python Autophage/build_daphnia_phage.py
 
 # the full-dataset model (12M params, bf16, grad accum; ~9 min on Apple MPS)
-.venv/bin/python SciAgent/phage_lm.py train --data SciAgent/data/train_full \
-    --out SciAgent/checkpoints/phage_lm_daphnia.pt \
+.venv/bin/python Autophage/phage_lm.py train --data Autophage/data/train_full \
+    --out Autophage/checkpoints/phage_lm_daphnia.pt \
     --d-model 384 --n-layers 6 --n-heads 6 --seq-len 512 --batch 8 \
     --grad-accum 2 --max-steps 2600
 
 # LM perplexity test vs Daphnia / P. ramosa / E. coli
-.venv/bin/python SciAgent/eval_lm_hosts.py
+.venv/bin/python Autophage/eval_lm_hosts.py
 ```

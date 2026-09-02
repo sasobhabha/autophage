@@ -93,7 +93,7 @@ def _opener(verify_ssl: bool):
 
 
 NCBI_BASE = "https://api.ncbi.nlm.nih.gov/datasets/v2alpha"
-USER_AGENT = "SciAgent/0.1 (synthetic phage research; contact: local)"
+USER_AGENT = "Autophage/0.1 (synthetic phage research; contact: local)"
 
 
 def ncbi_get(url: str, verify_ssl: bool = False, timeout: int = 90):

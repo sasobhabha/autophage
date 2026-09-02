@@ -1,7 +1,7 @@
 """
 Synthetic bacteriophage genome design and validation.
 
-This module provides two halves, mirroring the SciAgent "neural proposer /
+This module provides two halves, mirroring the Autophage "neural proposer /
 symbolic verifier" split:
 
 1. `generate_phage_genome(...)` -- the *proposer*. Builds a synthetic dsDNA

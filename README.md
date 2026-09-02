@@ -1,15 +1,15 @@
-# SciAgent: Neuro-Symbolic Agentic Reasoner for Scientific Discovery
+# Autophage: Neuro-Symbolic Agentic Reasoner for Scientific Discovery
 
 ## Overview
 
 As of 2026, the AI landscape has shifted from large, general-purpose conversational models to specialized, autonomous **Agentic AI** capable of rigorous reasoning and solving open scientific problems. Purely neural models often hallucinate or fail at long-horizon logical tasks.
 
-**SciAgent** is a "genius" AI architecture designed to tackle these exact limitations. It bridges the gap between deep learning's pattern recognition and symbolic AI's rigorous logic, creating an autonomous agent capable of discovering new mathematical theorems, optimizing physical materials, and auditing scientific literature.
+**Autophage** is a "genius" AI architecture designed to tackle these exact limitations. It bridges the gap between deep learning's pattern recognition and symbolic AI's rigorous logic, creating an autonomous agent capable of discovering new mathematical theorems, optimizing physical materials, and auditing scientific literature.
 
 ## The 2026 Context: Why is this revolutionary?
-1. **Agentic Autonomy:** Instead of passive Q&A, SciAgent operates in a continuous loop: formulating hypotheses, designing experiments (or logical proofs), executing them via external tools, and updating its internal state.
+1. **Agentic Autonomy:** Instead of passive Q&A, Autophage operates in a continuous loop: formulating hypotheses, designing experiments (or logical proofs), executing them via external tools, and updating its internal state.
 2. **Neuro-Symbolic Architecture:** We combine a specialized, small-parameter Neural Reasoner (based on sparse attention and mixture-of-experts) with a Symbolic Verifier. The neural network "guesses" the creative leap, and the symbolic engine "proves" it.
-3. **Self-Auditing Science:** SciAgent is designed to combat the reproducibility crisis by systematically validating research claims through automated logical auditing.
+3. **Self-Auditing Science:** Autophage is designed to combat the reproducibility crisis by systematically validating research claims through automated logical auditing.
 
 ## Architecture
 
@@ -38,25 +38,25 @@ The system consists of three main components:
 python3 -m venv .venv && .venv/bin/pip install torch numpy
 
 # Generate a synthetic phage genome and validate it against phage biology
-.venv/bin/python SciAgent/phage_genome.py generate --length 50000 --gc 0.50 --seed 1 --validate
+.venv/bin/python Autophage/phage_genome.py generate --length 50000 --gc 0.50 --seed 1 --validate
 
 # Screen a genome for host compatibility against real superbug genomes (downloads from NCBI)
-.venv/bin/python SciAgent/phage_genome.py compat --input genome.fasta --cache SciAgent/data/hosts
+.venv/bin/python Autophage/phage_genome.py compat --input genome.fasta --cache Autophage/data/hosts
 
 # Download real phage genomes, train an expert genomic LM, generate a genome
-.venv/bin/python SciAgent/phage_lm.py fetch --max-genomes 100 --out SciAgent/data/phages
-.venv/bin/python SciAgent/phage_lm.py train --data SciAgent/data/phages --out SciAgent/checkpoints/phage_lm.pt
-.venv/bin/python SciAgent/phage_lm.py generate --model SciAgent/checkpoints/phage_lm.pt --length 50000 --out lm_genome.fasta
+.venv/bin/python Autophage/phage_lm.py fetch --max-genomes 100 --out Autophage/data/phages
+.venv/bin/python Autophage/phage_lm.py train --data Autophage/data/phages --out Autophage/checkpoints/phage_lm.pt
+.venv/bin/python Autophage/phage_lm.py generate --model Autophage/checkpoints/phage_lm.pt --length 50000 --out lm_genome.fasta
 
 # Host-conditioned design: make a phage adapted to *any* host genome
-.venv/bin/python SciAgent/phage_genome.py host-profile --host-cds host_cds.fa --out host_profile.json
-.venv/bin/python SciAgent/phage_genome.py generate --host-cds host_cds.fa --length 50000 --validate
-.venv/bin/python SciAgent/phage_genome.py proteins --input synthetic_phage.fasta  # test protein production
+.venv/bin/python Autophage/phage_genome.py host-profile --host-cds host_cds.fa --out host_profile.json
+.venv/bin/python Autophage/phage_genome.py generate --host-cds host_cds.fa --length 50000 --validate
+.venv/bin/python Autophage/phage_genome.py proteins --input synthetic_phage.fasta  # test protein production
 ```
 
 ## Synthetic phage genome design and validation (`phage_genome.py`)
 
-Implements the SciAgent proposer/verifier loop for bacteriophage genomics:
+Implements the Autophage proposer/verifier loop for bacteriophage genomics:
 
 - **Proposer** (`generate_phage_genome`): builds in-silico dsDNA genomes with
   biologically plausible features — protein-coding genes back-translated with
@@ -168,9 +168,9 @@ from the full dataset (31,317 *D. magna* CDS codon profile + whole genome)
 and machine-verifies it: all phage-biology checks pass, 100% of ORFs
 produce proteins, mean codon-adaptation index 0.849 vs Daphnia, and d2\* =
 0.397 vs the real *Pasteuria ramosa* genome (the bacterium that sterilizes
-Daphnia in labs) — the lab-trial target. Outputs land in `SciAgent/outputs/`
+Daphnia in labs) — the lab-trial target. Outputs land in `Autophage/outputs/`
 (FASTA + GFF3 + JSON), with the full trial protocol in
-`SciAgent/DAPHNIA_PHAGE_LAB_TRIAL.md`. Honest limit: in-silico adaptation
+`Autophage/DAPHNIA_PHAGE_LAB_TRIAL.md`. Honest limit: in-silico adaptation
 is a plausibility signal; infectivity must be proven in the wet lab.
 
 ### Any host genome → its phage
@@ -181,10 +181,10 @@ deliverable. Example — KEGG genome **T03681** (*Lactobacillus acidophilus*
 FSI4, a yogurt probiotic):
 
 ```bash
-.venv/bin/python SciAgent/build_daphnia_phage.py \
+.venv/bin/python Autophage/build_daphnia_phage.py \
     --host-name Lactobacillus_acidophilus_FSI4 \
-    --genome-fasta SciAgent/data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
-    --gtf SciAgent/data/hosts/Lactobacillus_acidophilus_FSI4.gff \
+    --genome-fasta Autophage/data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
+    --gtf Autophage/data/hosts/Lactobacillus_acidophilus_FSI4.gff \
     --prefix lacto_phage_1 --seed 7 --no-pathogen-screen
 ```
 
@@ -201,13 +201,13 @@ Drop a FASTA in a directory (no annotation needed) and run
 `batch_any_genome.py` — the codon profile is then estimated directly from
 the genome sequence. Proven on 10 real reference genomes of priority
 antibiotic-resistant bacteria spanning **33–67% GC**
-(`SciAgent/outputs/any_genome_batch.json`): **10/10 produced a fully
+(`Autophage/outputs/any_genome_batch.json`): **10/10 produced a fully
 VALIDATED phage**, with 100% protein production, mean CAI 0.68–0.81 vs each
 host, and d2\* 0.31–0.46 vs each host's own genome.
 
 ```bash
-.venv/bin/python SciAgent/batch_any_genome.py --dir /tmp/host_cache \
-    --out SciAgent/outputs/any_genome_batch.json
+.venv/bin/python Autophage/batch_any_genome.py --dir /tmp/host_cache \
+    --out Autophage/outputs/any_genome_batch.json
 ```
 
 Both caveats: (1) *bacterio*phages infect bacteria/archaea — for a
@@ -226,5 +226,5 @@ measure perplexity on any genome, and retrain.
 ## Test
 
 ```bash
-cd SciAgent && .venv/bin/python -m unittest test_phage_pipeline -v
+cd Autophage && .venv/bin/python -m unittest test_phage_pipeline -v
 ```

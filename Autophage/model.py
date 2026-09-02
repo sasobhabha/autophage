@@ -46,7 +46,7 @@ class ReasoningBlock(nn.Module):
 
 class NeuroSymbolicProposer(nn.Module):
     """
-    The core genius model of SciAgent. 
+    The core genius model of Autophage. 
     It proposes hypotheses (e.g., molecular structures, theorem steps) 
     that are later verified by a symbolic engine.
     """

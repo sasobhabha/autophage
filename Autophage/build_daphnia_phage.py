@@ -14,7 +14,7 @@ any cell genome, make a phage for it"):
                        d2* screen vs the host genome, an optional extra
                        bacterium, and 10 real superbug reference genomes
 
-Outputs land in SciAgent/outputs/<prefix>.<fasta|gff3|json>
+Outputs land in Autophage/outputs/<prefix>.<fasta|gff3|json>
 
 Examples:
     # Daphnia magna (default; KEGG/ncbi dataset in data/Daphnia_magna_NIES)
@@ -164,11 +164,11 @@ def write_gff3(seq: str, name: str, genes: list, path: Path) -> None:
     with open(path, "w") as f:
         f.write("##gff-version 3\n")
         f.write(f"##sequence-region {name} 1 {len(seq)}\n")
-        f.write(f"{name}\tSciAgent\ttransit_peptide\t1\t200\t.\t+\t.\t"
+        f.write(f"{name}\tAutophage\ttransit_peptide\t1\t200\t.\t+\t.\t"
                 f"ID=TR001;product=direct terminal repeat (packaging signal)"
                 f";note=predicted\n")
         for g in genes:
-            f.write(f"{name}\tSciAgent\tCDS\t{g['start']}\t{g['end']}\t.\t"
+            f.write(f"{name}\tAutophage\tCDS\t{g['start']}\t{g['end']}\t.\t"
                     f"{g['strand']}\t0\tID={g['gene_id']};"
                     f"product={g['product']};cai={g['cai']};"
                     f"note=predicted, layout-based annotation\n")

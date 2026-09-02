@@ -5,7 +5,7 @@ genomic language model (and to close the loop with the verifier).
 
 ## 1. The artifacts
 
-All live in `SciAgent/checkpoints/` (gitignored — regenerate via `train` or
+All live in `Autophage/checkpoints/` (gitignored — regenerate via `train` or
 attach to a GitHub Release for sharing).
 
 | File | Size | What it is | Load with |
@@ -33,17 +33,17 @@ learned weights.
 python3 -m venv .venv && .venv/bin/pip install torch numpy
 
 # generate a 50 kb genome from the trained model (MPS/CUDA/CPU auto-detected)
-.venv/bin/python SciAgent/phage_lm.py generate \
-    --model SciAgent/checkpoints/phage_lm_daphnia_bf16.pt \
+.venv/bin/python Autophage/phage_lm.py generate \
+    --model Autophage/checkpoints/phage_lm_daphnia_bf16.pt \
     --length 50000 --temperature 0.75 --out /tmp/phage_lm.fasta
 
 # verify what it produced (phage-biology checks + protein production)
-.venv/bin/python SciAgent/phage_genome.py validate --input /tmp/phage_lm.fasta
-.venv/bin/python SciAgent/phage_genome.py proteins --input /tmp/phage_lm.fasta
+.venv/bin/python Autophage/phage_genome.py validate --input /tmp/phage_lm.fasta
+.venv/bin/python Autophage/phage_genome.py proteins --input /tmp/phage_lm.fasta
 
 # screen it against real superbug genomes (downloads/caches from NCBI)
-.venv/bin/python SciAgent/phage_genome.py compat --input /tmp/phage_lm.fasta \
-    --cache SciAgent/data/hosts
+.venv/bin/python Autophage/phage_genome.py compat --input /tmp/phage_lm.fasta \
+    --cache Autophage/data/hosts
 ```
 
 ## 3. Interact from Python
@@ -52,10 +52,10 @@ python3 -m venv .venv && .venv/bin/pip install torch numpy
 
 ```python
 import sys
-sys.path.insert(0, "SciAgent")
+sys.path.insert(0, "Autophage")
 from phage_lm import load_lm, PhageTokenizer
 
-model, tok = load_lm("SciAgent/checkpoints/phage_lm_daphnia_bf16.pt")
+model, tok = load_lm("Autophage/checkpoints/phage_lm_daphnia_bf16.pt")
 # model is a decoder-only Transformer (GPT-style, rotary embeddings)
 
 # sample a genome: prompt = token ids (6-mers), length = token count
@@ -74,7 +74,7 @@ range for DNA), `top_k` (nucleus over k = 50).
 import pickle, torch
 from phage_lm import PhageGenomeLM, PhageTokenizer
 
-with open("SciAgent/checkpoints/phage_lm_daphnia.pkl", "rb") as f:
+with open("Autophage/checkpoints/phage_lm_daphnia.pkl", "rb") as f:
     data = pickle.load(f)                       # {"model": state_dict, "config": {...}}
 
 tok = PhageTokenizer()
@@ -109,20 +109,20 @@ print(f"loss {loss:.3f} | perplexity {math.exp(loss):.1f}")
 Reference numbers for the full-dataset model (lower = better understood):
 Daphnia genome **3.9** perplexity · *Pasteuria ramosa* **3.9** · foreign
 *E. coli* **4.2** · shuffled control **4.2** · uniform random **6.2**.
-Ready-made version: `SciAgent/eval_lm_hosts.py`.
+Ready-made version: `Autophage/eval_lm_hosts.py`.
 
 ## 4. Retrain or fine-tune
 
 ```bash
 # from scratch on the full dataset (reproduces phage_lm_daphnia.pt;
 # ~9 min on Apple MPS, ~2600 steps, gradient accumulation + bf16)
-.venv/bin/python SciAgent/phage_lm.py train \
-    --data SciAgent/data/train_full --out SciAgent/checkpoints/mymodel.pt \
+.venv/bin/python Autophage/phage_lm.py train \
+    --data Autophage/data/train_full --out Autophage/checkpoints/mymodel.pt \
     --d-model 384 --n-layers 6 --n-heads 6 --seq-len 512 \
     --batch 8 --grad-accum 2 --max-steps 2600
 
 # smaller/faster sanity run
-.venv/bin/python SciAgent/phage_lm.py train --data SciAgent/data/train_full \
+.venv/bin/python Autophage/phage_lm.py train --data Autophage/data/train_full \
     --out /tmp/small.pt --max-steps 200
 ```
 
@@ -138,18 +138,18 @@ builder, which needs no trained weights:
 
 ```bash
 # any host genome -> complete annotated phage (Daphnia by default)
-.venv/bin/python SciAgent/build_daphnia_phage.py
+.venv/bin/python Autophage/build_daphnia_phage.py
 
 # ... or L. acidophilus FSI4 (KEGG T03681), or any other genome
-.venv/bin/python SciAgent/build_daphnia_phage.py \
+.venv/bin/python Autophage/build_daphnia_phage.py \
     --host-name Lactobacillus_acidophilus_FSI4 \
-    --genome-fasta SciAgent/data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
-    --gtf SciAgent/data/hosts/Lactobacillus_acidophilus_FSI4.gff \
+    --genome-fasta Autophage/data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
+    --gtf Autophage/data/hosts/Lactobacillus_acidophilus_FSI4.gff \
     --prefix lacto_phage_1 --seed 7 --no-pathogen-screen
 
 # batch: every FASTA in a directory -> validated phage (no annotation needed)
-.venv/bin/python SciAgent/batch_any_genome.py --dir /tmp/host_cache \
-    --out SciAgent/outputs/any_genome_batch.json
+.venv/bin/python Autophage/batch_any_genome.py --dir /tmp/host_cache \
+    --out Autophage/outputs/any_genome_batch.json
 ```
 
 ## 6. Device & precision notes

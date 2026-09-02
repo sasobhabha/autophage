@@ -1,5 +1,5 @@
 """
-Unit tests for the SciAgent synthetic phage pipeline
+Unit tests for the Autophage synthetic phage pipeline
 (phage_genome.py, host_compat.py, phage_lm.py). All offline.
 """
 
