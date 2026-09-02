@@ -11,3 +11,5 @@ checkpoints/
 
 # macOS
 .DS_Store
+# session transcripts
+freebuff-chat-*.md
