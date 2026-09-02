@@ -213,6 +213,12 @@ the host's bacteria (as in the Daphnia/∗Pasteuria ramosa∗ case above);
 (2) "validated" is in-silico phage biology + host adaptation — infectivity
 is always settled in the wet lab.
 
+## Interacting with the trained models
+
+**→ See [`MODEL_USAGE.md`](MODEL_USAGE.md)**: how to load the checkpoints
+(`.pt` vs `.pkl`, fp32 vs bf16), generate genomes from Python or the CLI,
+measure perplexity on any genome, and retrain.
+
 ## Test
 
 ```bash
