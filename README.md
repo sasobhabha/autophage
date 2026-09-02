@@ -26,6 +26,10 @@ The system consists of three main components:
 - **`host_compat.py`**: Fetches real "superbug" reference genomes from NCBI and scores query genomes with the published VirHostMatcher d2* ONF dissimilarity measure.
 - **`phage_lm.py`**: Evo-style decoder-only genomic language model trained on real public phage genomes (fetch / train / generate).
 - `test_phage_pipeline.py`: Unit tests for the above.
+- **`build_daphnia_phage.py`**: any-host design loop — builds a complete,
+  annotated, host-adapted phage genome (FASTA + GFF3 + JSON) and verifies it.
+- **`batch_any_genome.py`**: runs that loop over every genome in a directory
+  (no annotation needed).
 
 ## Getting Started
 
@@ -34,20 +38,20 @@ The system consists of three main components:
 python3 -m venv .venv && .venv/bin/pip install torch numpy
 
 # Generate a synthetic phage genome and validate it against phage biology
-.venv/bin/python phage_genome.py generate --length 50000 --gc 0.50 --seed 1 --validate
+.venv/bin/python SciAgent/phage_genome.py generate --length 50000 --gc 0.50 --seed 1 --validate
 
 # Screen a genome for host compatibility against real superbug genomes (downloads from NCBI)
-.venv/bin/python phage_genome.py compat --input genome.fasta --cache data/hosts
+.venv/bin/python SciAgent/phage_genome.py compat --input genome.fasta --cache SciAgent/data/hosts
 
 # Download real phage genomes, train an expert genomic LM, generate a genome
-.venv/bin/python phage_lm.py fetch --max-genomes 100 --out data/phages
-.venv/bin/python phage_lm.py train --data data/phages --out checkpoints/phage_lm.pt
-.venv/bin/python phage_lm.py generate --model checkpoints/phage_lm.pt --length 50000 --out lm_genome.fasta
+.venv/bin/python SciAgent/phage_lm.py fetch --max-genomes 100 --out SciAgent/data/phages
+.venv/bin/python SciAgent/phage_lm.py train --data SciAgent/data/phages --out SciAgent/checkpoints/phage_lm.pt
+.venv/bin/python SciAgent/phage_lm.py generate --model SciAgent/checkpoints/phage_lm.pt --length 50000 --out lm_genome.fasta
 
 # Host-conditioned design: make a phage adapted to *any* host genome
-.venv/bin/python phage_genome.py host-profile --host-cds host_cds.fa --out host_profile.json
-.venv/bin/python phage_genome.py generate --host-cds host_cds.fa --length 50000 --validate
-.venv/bin/python phage_genome.py proteins --input synthetic_phage.fasta  # test protein production
+.venv/bin/python SciAgent/phage_genome.py host-profile --host-cds host_cds.fa --out host_profile.json
+.venv/bin/python SciAgent/phage_genome.py generate --host-cds host_cds.fa --length 50000 --validate
+.venv/bin/python SciAgent/phage_genome.py proteins --input synthetic_phage.fasta  # test protein production
 ```
 
 ## Synthetic phage genome design and validation (`phage_genome.py`)
@@ -164,10 +168,10 @@ from the full dataset (31,317 *D. magna* CDS codon profile + whole genome)
 and machine-verifies it: all phage-biology checks pass, 100% of ORFs
 produce proteins, mean codon-adaptation index 0.849 vs Daphnia, and d2\* =
 0.397 vs the real *Pasteuria ramosa* genome (the bacterium that sterilizes
-Daphnia in labs) — the lab-trial target. Outputs land in `outputs/`
+Daphnia in labs) — the lab-trial target. Outputs land in `SciAgent/outputs/`
 (FASTA + GFF3 + JSON), with the full trial protocol in
-`DAPHNIA_PHAGE_LAB_TRIAL.md`. Honest limit: in-silico adaptation is a
-plausibility signal; infectivity must be proven in the wet lab.
+`SciAgent/DAPHNIA_PHAGE_LAB_TRIAL.md`. Honest limit: in-silico adaptation
+is a plausibility signal; infectivity must be proven in the wet lab.
 
 ### Any host genome → its phage
 
@@ -179,8 +183,8 @@ FSI4, a yogurt probiotic):
 ```bash
 .venv/bin/python SciAgent/build_daphnia_phage.py \
     --host-name Lactobacillus_acidophilus_FSI4 \
-    --genome-fasta data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
-    --gtf data/hosts/Lactobacillus_acidophilus_FSI4.gff \
+    --genome-fasta SciAgent/data/hosts/Lactobacillus_acidophilus_FSI4.fasta \
+    --gtf SciAgent/data/hosts/Lactobacillus_acidophilus_FSI4.gff \
     --prefix lacto_phage_1 --seed 7 --no-pathogen-screen
 ```
 
@@ -197,9 +201,9 @@ Drop a FASTA in a directory (no annotation needed) and run
 `batch_any_genome.py` — the codon profile is then estimated directly from
 the genome sequence. Proven on 10 real reference genomes of priority
 antibiotic-resistant bacteria spanning **33–67% GC**
-(`outputs/any_genome_batch.json`): **10/10 produced a fully VALIDATED
-phage**, with 100% protein production, mean CAI 0.68–0.81 vs each host, and
-d2\* 0.31–0.46 vs each host's own genome.
+(`SciAgent/outputs/any_genome_batch.json`): **10/10 produced a fully
+VALIDATED phage**, with 100% protein production, mean CAI 0.68–0.81 vs each
+host, and d2\* 0.31–0.46 vs each host's own genome.
 
 ```bash
 .venv/bin/python SciAgent/batch_any_genome.py --dir /tmp/host_cache \
@@ -222,5 +226,5 @@ measure perplexity on any genome, and retrain.
 ## Test
 
 ```bash
-.venv/bin/python -m unittest test_phage_pipeline -v
+cd SciAgent && .venv/bin/python -m unittest test_phage_pipeline -v
 ```
